@@ -7,8 +7,8 @@ int Game::mCol = 10;
 int Game::mRow = 8;
 float Game::mGameScale = 2.f;
 sf::Vector2f Game::mGameTableOrigin(49.f, 41.f);
+std::vector<SceneNode::_ptr> Game::mGameTable = std::vector<SceneNode::_ptr>();
 sf::Vector2i Game::mCellSize(16, 16);
-std::vector<SceneNode::_ptr> Game::mTable = std::vector<SceneNode::_ptr>();
 
 Game::Game()
 	: mWindow(sf::VideoMode(mScreenWidth* (int)mGameScale, mScreenHeight* (int)mGameScale), "BOMBERMAN!")
@@ -21,6 +21,8 @@ Game::Game()
 	, mWallsNb(5)
 	, mEnemiesNb(3)
 {
+	mWindow.setFramerateLimit(mFPS);
+
 	std::vector<std::string> resources({ "borders","characters","enemies", "tileset" });
 	{
 		for (auto&& name : resources)
@@ -35,51 +37,10 @@ Game::Game()
 	mColors["object1"] = sf::Color(128, 64, 48, 255);
 	mColors["object2"] = sf::Color(48, 0, 0, 255);
 	
-	mScreen_ptr = std::make_shared<SpriteNode>();
-	mScreen_ptr->getSprite().setTexture(mTextures.get("borders"));
-	mScreen_ptr->getSprite().setTextureRect({ 1 + (mScreenWidth+1), 1, mScreenWidth, mScreenHeight });
-	mScreen_ptr->getSprite().scale(sf::Vector2f(1.f, 1.f) * mGameScale);
-	mScene.attachChild(mScreen_ptr);
-
-	mFloor_ptr = std::make_shared<SceneNode>();
-	for (int x = 0; x < mCol; x++)
-	{
-		for (int y = 0; y < mRow; y++)
-		{
-			sf::Vector2f position = mGameTableOrigin;
-			position.x += x * mCellSize.x;
-			position.y += y * mCellSize.y;
-			position *= mGameScale;
-
-			SpriteNode::_ptr floor_ptr = std::make_shared<SpriteNode>();
-			floor_ptr->getSprite().setTexture(mTextures.get("tileset"));
-			floor_ptr->getSprite().setTextureRect({ 103, 1, mCellSize.x, mCellSize.y });
-			floor_ptr->getSprite().scale(mGameScale, mGameScale);
-			floor_ptr->getSprite().setColor(mColors["background"]);
-			floor_ptr->getSprite().setPosition(position);
-
-			mFloor_ptr->attachChild(floor_ptr);
-		}
-	}
-	mScene.attachChild(mFloor_ptr);
-
-	for (int x = 0; x < mCol; x++)
-	{
-		for (int y = 0; y < mRow; y++)
-		{
-			SceneNode::_ptr cell_ptr = std::make_shared<SceneNode>();
-			mTable.push_back(cell_ptr);
-			mScene.attachChild(cell_ptr);
-		}
-	}
-	mPlayer_ptr = make_shared<GameObject>("Player", mCellSize, 0, 0);
-	mPlayer_ptr->getSprite().setTexture(mTextures.get("characters"));
-	mPlayer_ptr->getSprite().setTextureRect({ 1, 1, mCellSize.x, mCellSize.y });
-	mPlayer_ptr->getSprite().scale(mGameScale, mGameScale);
-	mPlayer_ptr->getSprite().setColor(mColors["object1"]);
-	mPlayer_ptr->setSelf();
-	mScene.attachChild(mPlayer_ptr);
-
+	initializeBorders();
+	initializeFloor();
+	initializeGameTable();
+	initializePlayer(0, 0);
 	createRandomWalls(mWallsNb);
 	createEnemies(mEnemiesNb);
 	
@@ -122,6 +83,22 @@ void Game::processEvents()
 			break;
 		}
 	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+	{
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+	{
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+	{
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+	{
+	}
+	if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+	{
+	}
+
 }
 
 void Game::renderFrame()
@@ -134,6 +111,67 @@ void Game::renderFrame()
 	mWindow.display();
 }
 
+void Game::initializeBorders()
+{
+	mScreen_ptr = std::make_shared<SpriteNode>();
+	mScreen_ptr->getSprite().setTexture(mTextures.get("borders"));
+	mScreen_ptr->getSprite().setTextureRect({ 1 + (mScreenWidth + 1), 1, mScreenWidth, mScreenHeight });
+	mScreen_ptr->getSprite().scale(sf::Vector2f(1.f, 1.f) * mGameScale);
+	mScene.attachChild(mScreen_ptr);
+}
+
+void Game::initializeFloor()
+{
+	mFloor_ptr = std::make_shared<SceneNode>();
+	for (int x = 0; x < mCol; x++)
+	{
+		for (int y = 0; y < mRow; y++)
+		{
+			sf::Vector2f position = mGameTableOrigin;
+			position.x += x * mCellSize.x;
+			position.y += y * mCellSize.y;
+			position *= mGameScale;
+
+			SpriteNode::_ptr floor_ptr = std::make_shared<SpriteNode>();
+			floor_ptr->getSprite().setTexture(mTextures.get("tileset"));
+			floor_ptr->getSprite().setTextureRect({ 103, 1, mCellSize.x, mCellSize.y });
+			floor_ptr->getSprite().scale(mGameScale, mGameScale);
+			floor_ptr->getSprite().setColor(mColors["background"]);
+			floor_ptr->getSprite().setPosition(position);
+
+			mFloor_ptr->attachChild(floor_ptr);
+		}
+	}
+	mScene.attachChild(mFloor_ptr);
+}
+
+void Game::initializeGameTable()
+{
+	for (int x = 0; x < mCol; x++)
+	{
+		for (int y = 0; y < mRow; y++)
+		{
+			SceneNode::_ptr cell_ptr = std::make_shared<SceneNode>();
+			mGameTable.push_back(cell_ptr);
+			mScene.attachChild(cell_ptr);
+		}
+	}
+}
+
+void Game::initializePlayer(int x, int y)
+{
+	if (x >= mCol || x < 0 || y >= mRow || y < 0)
+		throw std::invalid_argument("player out of world");
+
+	mPlayer_ptr = make_shared<GameObject>("Player", mCellSize, x, y);
+	mPlayer_ptr->getSprite().setTexture(mTextures.get("characters"));
+	mPlayer_ptr->getSprite().setTextureRect({ 1, 1, mCellSize.x, mCellSize.y });
+	mPlayer_ptr->getSprite().scale(mGameScale, mGameScale);
+	mPlayer_ptr->getSprite().setColor(mColors["object1"]);
+	mPlayer_ptr->setSelf();
+	mScene.attachChild(mPlayer_ptr);
+}
+
 void Game::createRandomWalls(int amount)
 {
 	int count = 0;
@@ -144,7 +182,7 @@ void Game::createRandomWalls(int amount)
 		int x = rand() % mCol;
 		int y = rand() % mRow;
 
-		while (mTable[y * mCol + x]->getChildren().size() > 0)
+		while (mGameTable[y * mCol + x]->getChildren().size() > 0)
 		{
 			x = rand() % mCol;
 			y = rand() % mRow;
@@ -159,7 +197,7 @@ void Game::createRandomWalls(int amount)
 		
 		std::cout << "x: " << x << " y: " << y << std::endl;
 
-		mTable[y * mCol + x]->attachChild(go_ptr);
+		mGameTable[y * mCol + x]->attachChild(go_ptr);
 		count++;
 	}
 }
@@ -174,7 +212,7 @@ void Game::createEnemies(int amount)
 		int x = rand() % mCol;
 		int y = rand() % mRow;
 
-		while (mTable[y * mCol + x]->getChildren().size() > 0)
+		while (mGameTable[y * mCol + x]->getChildren().size() > 0)
 		{
 			x = rand() % mCol;
 			y = rand() % mRow;
@@ -189,7 +227,7 @@ void Game::createEnemies(int amount)
 
 		std::cout << "x: " << x << " y: " << y << std::endl;
 
-		mTable[y * mCol + x]->attachChild(go_ptr);
+		mGameTable[y * mCol + x]->attachChild(go_ptr);
 		count++;
 	}
 }

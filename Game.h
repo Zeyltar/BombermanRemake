@@ -24,11 +24,15 @@ public:
     static int mRow;
     static float mGameScale;
     static sf::Vector2f mGameTableOrigin;
+    static std::vector<SceneNode::_ptr> mGameTable;
     static sf::Vector2i mCellSize;
-    static std::vector<SceneNode::_ptr> mTable;
 private:
     void processEvents();
     void renderFrame();
+    void initializeBorders();
+    void initializeFloor();
+    void initializeGameTable();
+    void initializePlayer(int x, int y);
     void createRandomWalls(int amount);
     void createEnemies(int amount);
     // Affichage
